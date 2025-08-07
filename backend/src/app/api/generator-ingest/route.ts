@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
-import { taipowerApiAdapter } from "@/lib/adapters";
-import { TaipowerRawData } from "@/lib/types";
+import { taipowerApiAdapter } from "@/lib/taipower-adapter";
+import { TaipowerRawData } from "@/lib/taipower-types";
 
 const TAIPOWER_API_URL = process.env.GENERATING_UNITS_DATA;
 const COLLECTION_NAME = "generating-unit";
@@ -14,6 +14,7 @@ export async function POST() {
     );
   }
 
+  // 取得 Taipower API 資料
   try {
     const response = await fetch(TAIPOWER_API_URL);
     if (!response.ok) {
@@ -22,14 +23,18 @@ export async function POST() {
       );
     }
     const rawData: TaipowerRawData = await response.json();
-    console.log("Raw data fetched successfully:", rawData);
 
+    // 測試是否fetch成功
+    //console.log("Raw data fetched successfully:", rawData);
+
+    // 連接到 MongoDB 資料庫
     const { db } = await connectToDatabase();
 
-    // (確保 Collection 存在的邏輯維持不變)
     const collections = await db
       .listCollections({ name: COLLECTION_NAME })
       .toArray();
+
+    // 檢查是否已存在指定的集合
     if (collections.length === 0) {
       await db.createCollection(COLLECTION_NAME, {
         timeseries: {
@@ -43,8 +48,11 @@ export async function POST() {
       );
     }
 
+    // 使用 Taipower API adapter轉換數據
     const transformedData = taipowerApiAdapter(rawData);
-    console.log("Transformed data:", transformedData);
+
+    // 測試轉換後的數據
+    //console.log("Transformed data:", transformedData);
 
     if (transformedData.units.length === 0) {
       return NextResponse.json(
@@ -64,10 +72,10 @@ export async function POST() {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Failed to ingest data:", error);
+    console.error("Failed to ingest Taipower data:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { message: "Failed to ingest data", error: errorMessage },
+      { message: "Failed to ingest Taipower data", error: errorMessage },
       { status: 500 }
     );
   }

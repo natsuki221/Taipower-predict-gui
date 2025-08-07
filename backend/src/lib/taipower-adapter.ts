@@ -1,4 +1,8 @@
-import { TaipowerRawData, PowerGenerationSnapshot, UnitData } from "./types";
+import {
+  TaipowerRawData,
+  PowerGenerationSnapshot,
+  UnitData,
+} from "./taipower-types";
 
 const parseNumericValue = (value: string): number | null => {
   // ... (此輔助函式維持不變)
