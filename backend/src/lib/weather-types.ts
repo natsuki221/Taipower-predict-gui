@@ -1,136 +1,109 @@
 /**
- * @file weather-types.ts
- * @description 根據中央氣象署 (CWA) O-A0001-001 API 的回應重新設計的 TypeScript 型別定義。
- * @author Aston Lin (linnatsuki221@gmail.com)
- * @version 2.2.1
+ * @file /src/lib/weather-types.ts
+ * @description 為 CWA O-A0001-001 和 O-A0003-001 API 回應以及資料庫儲存模型定義 TypeScript 型別。
+ * @author 資深軟體工程師
+ * @version 3.0.0
  * @date 2025-08-11
- * @changes 修正日期欄位型別：從字串改為 Date 物件以符合 MongoDB 時序集合要求
  */
 
 // =================================================================
-// 1. Raw API Response Types (原始 API 回應型別)
+// 1. CWA API 原始回應型別 (Raw CWA API Response Types)
 // =================================================================
 
 /**
- * CWA API 的完整回應結構。
+ * 代表 CWA API 回應中的單個天氣元素值。
+ * 由於 API 回傳值均為字串，我們以此為基礎。
  */
-export interface CwaApiResponse {
-  success: 'true' | 'false';
-  result: {
-    resource_id: string;
-    fields: { id: string; type: string }[];
-  };
-  records: {
-    Station: CwaApiStationRecord[];
-  };
+type CwaElementValue = string;
+
+/**
+ * 代表 CWA API 回應中的地理空間資訊。
+ */
+interface CwaGeoInfo {
+  CountyName: string;
+  TownName: string;
 }
 
 /**
- * 代表單一氣象站的原始紀錄。
- * [v2.2.0] 修正：根據最新的 weather.json，將 DailyExtreme 物件結構還原。
+ * 代表 O-A0001-001 (自動氣象站) 和 O-A0003-001 (現在天氣觀測) 的通用測站紀錄結構。
+ * 結合了兩種 API 可能出現的所有欄位。
  */
-export interface CwaApiStationRecord {
-  StationName: string;
+export interface CwaApiStation {
   StationId: string;
+  StationName: string;
   ObsTime: {
     DateTime: string;
   };
-  GeoInfo: {
-    CountyName: string;
-    TownName?: string;
-  };
+  GeoInfo: CwaGeoInfo;
   WeatherElement: {
-    Weather: string;
-    WindDirection: string;
-    WindSpeed: string;
-    AirTemperature: string;
-    RelativeHumidity: string;
-    AirPressure: string;
-    GustInfo?: { // 設為可選以增加穩健性
-      PeakGustSpeed: string;
-      Occurred_at: {
-        WindDirection: string;
-        DateTime: string;
-      };
+    Weather: CwaElementValue;
+    WindDirection: CwaElementValue;
+    WindSpeed: CwaElementValue;
+    AirTemperature: CwaElementValue;
+    RelativeHumidity: CwaElementValue;
+    AirPressure: CwaElementValue;
+    // O-A0001-001 特有欄位 (設為可選)
+    GustInfo?: {
+      PeakGustSpeed: CwaElementValue;
     };
-    // 修正：還原 DailyExtreme 結構，並設為可選
+    // O-A0003-001 特有欄位 (設為可選)
     DailyExtreme?: {
       DailyHigh?: {
         TemperatureInfo: {
-          AirTemperature: string;
-          Occurred_at: {
-            DateTime: string;
-          };
+          AirTemperature: CwaElementValue;
         };
       };
       DailyLow?: {
         TemperatureInfo: {
-          AirTemperature: string;
-          Occurred_at: {
-            DateTime: string;
-          };
+          AirTemperature: CwaElementValue;
         };
       };
     };
   };
 }
 
+/**
+ * CWA API 的通用回應結構。
+ * @template T - `records.Station` 陣列中元素的型別。
+ */
+export interface CwaApiResponse<T> {
+  success: "true" | "false";
+  records: {
+    Station: T[];
+  };
+}
+
 // =================================================================
-// 2. Processed Application/Database Types (應用程式/資料庫處理後型別)
+// 2. 處理後的應用程式/資料庫型別 (Processed Application/Database Types)
 // =================================================================
 
 /**
- * 代表單筆已處理的、扁平化的氣象觀測資料。
- * 這是儲存於資料庫或在應用程式中使用的主要資料模型。
- * [v2.2.1] 修正：所有日期欄位現在使用 Date 物件而非字串，以符合 MongoDB 時序集合要求。
+ * 代表單一測站的已處理、標準化的天氣資料。
+ * 這是組成快照的基礎單元。
  */
-export interface ProcessedWeatherData {
-  _id?: string; // 資料庫 ID
+export interface StationData {
   stationId: string;
   stationName: string;
   countyName: string;
-  townName: string | null;
-  
-  // 觀測時間 - 現在是 Date 物件 (MongoDB 時序集合的 timeField)
-  dateTime: Date;
-
-  // 主要天氣元素
+  townName: string;
   weather: string | null;
-  airTemperature: number | null; // 攝氏度 (°C)
-  relativeHumidity: number | null; // 百分比 (%)
-  airPressure: number | null; // 百帕 (hPa)
-  windSpeed: number | null; // 公尺/秒 (m/s)
-  windDirection: number | null; // 度 (°)
-
-  // 陣風資訊 - 現在是 Date 物件
-  peakGustSpeed: number | null; // 公尺/秒 (m/s)
-  peakGustTime: Date | null;
-
-  // 每日極值 - 現在是 Date 物件
-  dailyHighTemp: number | null; // 攝氏度 (°C)
-  dailyHighTempTime: Date | null;
-  dailyLowTemp: number | null; // 攝氏度 (°C)
-  dailyLowTempTime: Date | null;
+  windDirection: number | null;
+  windSpeed: number | null;
+  airTemperature: number | null;
+  relativeHumidity: number | null;
+  airPressure: number | null;
+  gustSpeed: number | null;
+  dailyHigh: number | null;
+  dailyLow: number | null;
 }
 
 /**
- * 代表在某個時間點，所有觀測站的氣象資料快照。
- * 主要用於一次性展示或匯總。
+ * 代表一個特定時間點的天氣資料快照，這是儲存於 MongoDB 的主要文件模型。
+ * @property {Date} timestamp - 快照的時間戳記，作為文件的唯一時間索引。
+ * @property {StationData[]} stations - 包含該時間點所有測站資料的陣列。
  */
 export interface WeatherSnapshot {
-  _id?: string; // 資料庫 ID
-  snapshotTime: Date; // 現在使用 Date 物件，代表此快照的建立時間
-  stations: StationSnapshotData[];
-}
-
-/**
- * 代表快照中單一測站的資料，是 ProcessedWeatherData 的子集。
- */
-export interface StationSnapshotData {
-  stationId: string;
-  stationName: string;
-  countyName: string;
-  townName: string | null;
-  airTemperature: number | null;
-  weather: string | null;
+  _id?: string; // MongoDB 自動產生的 ID
+  timestamp: Date;
+  stations: StationData[];
 }

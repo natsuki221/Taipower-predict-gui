@@ -1,108 +1,113 @@
 /**
- * @file weather-adapter.ts
- * @description 提供將 CWA API 原始天氣資料轉換為應用程式內部格式的適配器。
- * @author Aston Lin (linnatsuki221@gmail.com)
- * @version 2.3.1
+ * @file /src/lib/weather-adapter.ts
+ * @description 提供將 CWA API 原始天氣資料轉換為統一的 WeatherSnapshot 格式的適配器。
+ * @author 資深軟體工程師
+ * @version 3.0.0
  * @date 2025-08-11
- * @changes 修正 MongoDB 時序集合相容性：safeParseDate 現在回傳 Date 物件而非 ISO 字串
  */
 
 import {
-  CwaApiStationRecord,
-  ProcessedWeatherData,
-} from './weather-types';
+  CwaApiResponse,
+  CwaApiStation,
+  WeatherSnapshot,
+  StationData,
+} from "./weather-types";
 
 // =================================================================
-// 1. 常數定義 (Constants)
+// 1. 常數與輔助函式 (Constants & Helper Functions)
 // =================================================================
 
-const CWA_INVALID_VALUE = '-99';
+const CWA_INVALID_VALUE = "-99";
 
-// =================================================================
-// 2. 輔助函式 (Helper Functions)
-// =================================================================
-
-const safeParseFloat = (value: string): number | null => {
-  if (value === CWA_INVALID_VALUE) return null;
+/**
+ * 安全地將 CWA API 回傳的字串值轉換為浮點數。
+ * 如果值為無效標記 '-99' 或無法轉換，則回傳 null。
+ * @param value - 來自 CWA API 的字串值。
+ * @returns 轉換後的數字或 null。
+ */
+const safeParseFloat = (value: string | undefined): number | null => {
+  if (value === undefined || value === CWA_INVALID_VALUE) {
+    return null;
+  }
   const num = parseFloat(value);
   return isNaN(num) ? null : num;
 };
 
-const safeParseString = (value: string): string | null => {
-  return value === CWA_INVALID_VALUE ? null : value;
-};
-
 /**
- * 安全地解析日期字串並回傳 Date 物件（適用於 MongoDB 時序集合）
- * @param value - CWA API 提供的日期時間字串
- * @returns Date 物件或 null（如果日期無效）
+ * 安全地處理 CWA API 回傳的字串值。
+ * 如果值為無效標記 '-99'，則回傳 null。
+ * @param value - 來自 CWA API 的字串值。
+ * @returns 原始字串或 null。
  */
-const safeParseDate = (value: string): Date | null => {
-  if (value === CWA_INVALID_VALUE) return null;
-  const date = new Date(value);
-  // 驗證日期是否有效
-  return isNaN(date.getTime()) ? null : date;
+const safeParseString = (value: string | undefined): string | null => {
+  return value === undefined || value === CWA_INVALID_VALUE ? null : value;
 };
 
 // =================================================================
-// 3. 主要適配器 (Main Adapter)
+// 2. 主要適配器 (Main Adapter)
 // =================================================================
 
 /**
- * 將從 CWA API 取得的一批原始觀測站資料，轉換為扁平化、適合應用程式使用的格式。
- * [v2.3.1] 修正：
- * 1. safeParseDate 現在回傳 Date 物件而非 ISO 字串，以符合 MongoDB 時序集合要求。
- * 2. 對所有日期欄位統一使用 safeParseDate。
- * 3. 過濾掉主要觀測時間 (ObsTime) 無效的紀錄，確保資料完整性。
+ * 將從 CWA API (O-A0001 & O-A0003) 取得的原始測站資料陣列，
+ * 轉換為統一的、包含所有測站資料的單一 WeatherSnapshot 物件。
  *
- * @param records - 從 CWA API `records.Station` 取得的觀測站資料陣列。
- * @returns 一個只包含有效觀測紀錄的 `ProcessedWeatherData` 陣列。
+ * @param apiResponses - 一個包含 CwaApiResponse 物件的陣列。
+ * @returns 一個 WeatherSnapshot 物件，如果沒有有效資料則回傳 null。
  */
-export const adaptCwaRecordsToProcessedData = (
-  records: CwaApiStationRecord[]
-): ProcessedWeatherData[] => {
-  if (!records || records.length === 0) {
-    return [];
+export const adaptCwaDataToSnapshot = (
+  apiResponses: CwaApiResponse<CwaApiStation>[]
+): WeatherSnapshot | null => {
+  const allStations: CwaApiStation[] = apiResponses.flatMap(
+    (response) => response.records?.Station || []
+  );
+
+  if (allStations.length === 0) {
+    console.warn("[Adapter] No station data found in API responses.");
+    return null;
   }
 
-  const mappedRecords = records.map((record): ProcessedWeatherData | null => {
-    const { WeatherElement, GeoInfo, ObsTime, StationId, StationName } = record;
+  // 以第一筆有效資料的時間戳記作為整個快照的統一時間
+  const firstValidRecord = allStations.find(
+    (s) => s.ObsTime && s.ObsTime.DateTime
+  );
+  if (!firstValidRecord) {
+    console.warn("[Adapter] No valid observation time found in any record.");
+    return null;
+  }
+  const snapshotTimestamp = new Date(firstValidRecord.ObsTime.DateTime);
 
-    // 步驟 1: 驗證最關鍵的觀測時間，若無效則整筆紀錄作廢。
-    const validDateTime = safeParseDate(ObsTime.DateTime);
-    if (!validDateTime) {
-      console.warn(`[Adapter] Skipping record for station ${StationId} due to invalid ObsTime: ${ObsTime.DateTime}`);
-      return null;
+  // 使用 Map 來處理來自不同 API 的重複測站資料，確保每個測站 ID 只出現一次
+  const stationDataMap = new Map<string, StationData>();
+
+  for (const record of allStations) {
+    // 忽略沒有測站 ID 的無效資料
+    if (!record.StationId) {
+      continue;
     }
 
-    const dailyHighInfo = WeatherElement.DailyExtreme?.DailyHigh?.TemperatureInfo;
-    const dailyLowInfo = WeatherElement.DailyExtreme?.DailyLow?.TemperatureInfo;
-    const gustInfo = WeatherElement.GustInfo;
+    const existingData: StationData = stationDataMap.get(record.StationId) as StationData || {} as StationData;
 
-    // 步驟 2: 轉換為處理後的資料格式
-    const processedData: ProcessedWeatherData = {
-      stationId: StationId,
-      stationName: StationName,
-      countyName: GeoInfo.CountyName,
-      townName: GeoInfo.TownName || null,
-      dateTime: validDateTime, // 現在是 Date 物件而非字串
-      weather: safeParseString(WeatherElement.Weather),
-      airTemperature: safeParseFloat(WeatherElement.AirTemperature),
-      relativeHumidity: safeParseFloat(WeatherElement.RelativeHumidity),
-      airPressure: safeParseFloat(WeatherElement.AirPressure),
-      windSpeed: safeParseFloat(WeatherElement.WindSpeed),
-      windDirection: safeParseFloat(WeatherElement.WindDirection),
-      peakGustSpeed: gustInfo ? safeParseFloat(gustInfo.PeakGustSpeed) : null,
-      peakGustTime: gustInfo ? safeParseDate(gustInfo.Occurred_at.DateTime) : null,
-      dailyHighTemp: dailyHighInfo ? safeParseFloat(dailyHighInfo.AirTemperature) : null,
-      dailyHighTempTime: dailyHighInfo ? safeParseDate(dailyHighInfo.Occurred_at.DateTime) : null,
-      dailyLowTemp: dailyLowInfo ? safeParseFloat(dailyLowInfo.AirTemperature) : null,
-      dailyLowTempTime: dailyLowInfo ? safeParseDate(dailyLowInfo.Occurred_at.DateTime) : null,
+    const station: StationData = {
+      stationId: record.StationId,
+      stationName: record.StationName,
+      countyName: record.GeoInfo.CountyName,
+      townName: record.GeoInfo.TownName,
+      weather: safeParseString(record.WeatherElement.Weather) ?? existingData.weather ?? null,
+      windDirection: safeParseFloat(record.WeatherElement.WindDirection) ?? existingData.windDirection ?? null,
+      windSpeed: safeParseFloat(record.WeatherElement.WindSpeed) ?? existingData.windSpeed ?? null,
+      airTemperature: safeParseFloat(record.WeatherElement.AirTemperature) ?? existingData.airTemperature ?? null,
+      relativeHumidity: safeParseFloat(record.WeatherElement.RelativeHumidity) ?? existingData.relativeHumidity ?? null,
+      airPressure: safeParseFloat(record.WeatherElement.AirPressure) ?? existingData.airPressure ?? null,
+      gustSpeed: safeParseFloat(record.WeatherElement.GustInfo?.PeakGustSpeed) ?? existingData.gustSpeed ?? null,
+      dailyHigh: safeParseFloat(record.WeatherElement.DailyExtreme?.DailyHigh?.TemperatureInfo.AirTemperature) ?? existingData.dailyHigh ?? null,
+      dailyLow: safeParseFloat(record.WeatherElement.DailyExtreme?.DailyLow?.TemperatureInfo.AirTemperature) ?? existingData.dailyLow ?? null,
     };
 
-    return processedData;
-  });
+    stationDataMap.set(record.StationId, station);
+  }
 
-  // 步驟 3: 過濾掉在步驟 1 中被標記為 null 的無效紀錄
-  return mappedRecords.filter((record): record is ProcessedWeatherData => record !== null);
+  return {
+    timestamp: snapshotTimestamp,
+    stations: Array.from(stationDataMap.values()),
+  };
 };
