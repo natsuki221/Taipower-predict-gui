@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { startLocalScheduler } from "@/lib/local-scheduler";
+
+// 啟動本地排程器
+startLocalScheduler();
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
