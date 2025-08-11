@@ -104,7 +104,8 @@ async function ingestWeatherData() {
       ("code" in error || "writeErrors" in error)
     ) {
       const code = (error as { code?: number }).code;
-      const writeErrors = (error as { writeErrors?: { code?: number }[] }).writeErrors;
+      const writeErrors = (error as { writeErrors?: { code?: number }[] })
+        .writeErrors;
       if (
         code === 11000 ||
         (Array.isArray(writeErrors) &&
@@ -153,15 +154,17 @@ export async function GET() {
  * POST 處理器 - 方便手動觸發和測試
  */
 export async function POST() {
-  console.log("Weather data ingestion process started via POST (manual trigger).");
+  console.log(
+    "Weather data ingestion process started via POST (manual trigger)."
+  );
   try {
     const result = await ingestWeatherData();
     return NextResponse.json(
-      { 
-        message: result.message, 
+      {
+        message: result.message,
         insertedCount: result.insertedCount,
         method: "POST",
-        triggered: "manually"
+        triggered: "manually",
       },
       { status: result.status }
     );
