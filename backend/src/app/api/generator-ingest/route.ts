@@ -1,10 +1,26 @@
+/**
+ * @file route.ts (generator-ingest)
+ * @description 台電發電機組資料擷取 API 端點
+ * @author 資深軟體工程師
+ * @version 2.0.0
+ */
+
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/mongodb";
 import { taipowerApiAdapter } from "@/lib/taipower-adapters";
 import { TaipowerRawData } from "@/lib/taipower-types";
 
+/**
+ * 台電發電機組資料 API URL
+ */
 const GENERATING_UNITS_DATA = process.env.GENERATING_UNITS_DATA;
+
+/**
+ * MongoDB 集合名稱
+ */
 const COLLECTION_NAME = "generating-unit";
+
+// 授權驗證功能已預留供未來實現
 
 /**
  * 執行資料擷取與寫入的核心邏輯。

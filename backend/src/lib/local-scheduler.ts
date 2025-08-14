@@ -43,9 +43,29 @@ async function triggerEndpoint(endpoint: string): Promise<void> {
   }
 }
 
+/**
+ * 啟動本地排程器
+ * 
+ * ⚠️  重要提醒：此排程器僅適用於開發環境
+ * 
+ * 在生產環境中，建議使用以下替代方案：
+ * 1. Vercel Cron Jobs (如果部署到 Vercel)
+ * 2. GitHub Actions + Cron
+ * 3. 外部 Cron 服務 (如 cron-job.org)
+ * 4. 雲端排程服務 (AWS EventBridge, Google Cloud Scheduler)
+ * 
+ * @returns {void}
+ */
 export function startLocalScheduler(): void {
   // 只在開發模式且排程器尚未啟動時執行
-  if (process.env.NODE_ENV !== "development" || globalForScheduler.schedulerStarted) {
+  if (process.env.NODE_ENV !== "development") {
+    log("⚠️  生產環境偵測：本地排程器已停用");
+    log("請使用外部排程服務或 Vercel Cron Jobs");
+    return;
+  }
+  
+  if (globalForScheduler.schedulerStarted) {
+    log("排程器已啟動，跳過重複初始化");
     return;
   }
   

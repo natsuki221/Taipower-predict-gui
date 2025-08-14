@@ -15,11 +15,8 @@ import { adaptCwaDataToSnapshot } from "@/lib/weather-adapter";
 // 1. 常數與設定 (Constants & Configuration)
 // =================================================================
 
-// 從環境變數讀取 API 金鑰，若未設定則拋出錯誤
+// 從環境變數讀取 API 金鑰，驗證在運行時進行
 const CWA_API_KEY = process.env.WEATHER_API_KEY;
-if (!CWA_API_KEY) {
-  throw new Error("環境變數 WEATHER_API_KEY 未設定。");
-}
 
 const STATIONID = "C0AH50,C0AK10,467490,C0R260,C0R250,C0R140,C0R150,C0I110,C0I120,C0F0C0,C0F0D0,C0F0E0,C0F0A0,C0K290,C0K280,C0C590,C0C740,C0C750,C0E590,C0E570,C0E920,C0R190,C0R180,C0C620,467050,C0C730,C0K410,467410,C0G650,C0G640,C0G660,C0G670,467480,C0M670,467420,C0M680,C0M690,C0W140,C0W150,C0A860,C0AJ20,467590,C0R690,C0R350,C0R620,C0R710,C0R730,C0R880,C0R890,C0W160,467110,C0W170,467990,C0E791,C0H950,C0H9A0,C0I130,C0I080,C0T9D0,C0T820,C0T9B0,C0TA20,C0TA40,C0TA50,C0TA80,C0A570,C0AH90,C0A530,C0U980,C0C670,C0M700,C0M710,C0M720,C0M730,C0M740,C0S700,C0SA10,C0S890,C0F9K0,C0F9L0,C0F9M0,C0G680,C0G690,C0G700,C0K300,C0K310,C0E420,C0E930,C0F9N0,C0F9O0,C0K320,C0K330,C0M750,C0M760,C0H970,467650"
 const WEATHER_ELEMENTS = "Weather,WindDirection,WindSpeed,AirTemperature,RelativeHumidity,AirPressure,GustInfo,DailyHigh,DailyLow";
@@ -40,6 +37,11 @@ const COLLECTION_NAME = "weather-snapshots";
  */
 async function ingestWeatherData() {
   console.log("[Weather Ingest] 開始從 CWA API 擷取資料...");
+
+  // 運行時環境變數驗證
+  if (!CWA_API_KEY) {
+    throw new Error("環境變數 WEATHER_API_KEY 未設定。");
+  }
 
   // 建立 API 請求的 promises 陣列
   const fetchPromises = DATASET_IDS.map(id => {

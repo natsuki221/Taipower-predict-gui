@@ -7,10 +7,10 @@ const COLLECTION_NAME = "reserve-doc";
 
 /**
  * 核心資料擷取與儲存邏輯。
- * 此函數現在被設計為可由外部（如排程器）導入和調用。
+ * 此函數被設計為內部使用，不會導出到 Next.js 路由系統。
  * @returns 一個包含操作結果的物件
  */
-export async function ingestData() {
+async function ingestData() {
   console.log("[IngestJob] 開始執行 reserve-ingest 任務...");
   // 1. 從外部 API 獲取並轉換資料
   const apiUrl = process.env.RESERVE_API_URL;
