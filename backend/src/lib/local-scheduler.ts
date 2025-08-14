@@ -1,48 +1,84 @@
 import fetch from "node-fetch";
+import cron from 'node-cron';
 
-const BASE_URL = "http://localhost:3000"; // 您本地 Next.js 服務的 URL
-const ENDPOINTS = ["/api/generator-ingest", "/api/weather-ingest"];
-const INTERVAL_MS = 10 * 60 * 1000; // 10 分鐘
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+// 將任務按不同的排程分組
+const TEN_MINUTE_JOBS = ["/api/generator-ingest"];
+const HOURLY_JOBS = ["/api/weather-ingest"];
+const DAILY_RESERVE_JOB = "/api/reserve-ingest"; // reserve-ingest 有獨立的排程
 
 // 使用一個全域變數來儲存排程器的狀態，以防止在熱更新 (HMR) 時重複初始化。
 const globalForScheduler = globalThis as unknown as {
   schedulerStarted: boolean;
 };
 
+// =================================================================
+// 增強的日誌記錄器，自動加入時間戳記
+// =================================================================
+const log = (message: string, ...args: unknown[]) => {
+    const timestamp = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+    console.log(`[${timestamp}] [LocalScheduler] ${message}`, ...args);
+};
+
+const error = (message: string, ...args: unknown[]) => {
+    const timestamp = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+    console.error(`[${timestamp}] [LocalScheduler] ERROR: ${message}`, ...args);
+};
+
+
 async function triggerEndpoint(endpoint: string): Promise<void> {
   const url = `${BASE_URL}${endpoint}`;
-  // const timestamp = new Date().toISOString();
-  console.log(`[LocalScheduler] 觸發: ${url}`);
+  log(`觸發: ${url}`);
   try {
-    const response = await fetch(url, { method: "GET" });
-    if (!response.ok) throw new Error(`伺服器回應錯誤碼 ${response.status}`);
-    console.log(`[LocalScheduler] 成功: ${url}`);
-  } catch (error) {
-    console.error(`[LocalScheduler] 失敗: ${url}`, error);
+    const response = await fetch(url, { method: "POST" }); // 建議使用 POST 觸發操作
+    if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`伺服器回應錯誤碼 ${response.status}: ${errorBody}`);
+    }
+    const result = await response.json();
+    log(`成功: ${url}`, result);
+  } catch (err) {
+    error(`失敗: ${url}`, err);
   }
-}
-
-function runAllJobs(): void {
-  console.log("--- [LocalScheduler] 開始執行本輪任務 ---");
-  ENDPOINTS.forEach(triggerEndpoint);
 }
 
 export function startLocalScheduler(): void {
   // 只在開發模式且排程器尚未啟動時執行
-  if (
-    process.env.NODE_ENV === "development" &&
-    !globalForScheduler.schedulerStarted
-  ) {
-    console.log("--- [LocalScheduler] 正在為開發環境啟動... ---");
-    globalForScheduler.schedulerStarted = true;
-
-    runAllJobs(); // 立即執行第一次
-    setInterval(runAllJobs, INTERVAL_MS); // 設定定時器
-
-    console.log(
-      `--- [LocalScheduler] 已啟動，將每 ${
-        INTERVAL_MS / 1000 / 60
-      } 分鐘執行一次。 ---`
-    );
+  if (process.env.NODE_ENV !== "development" || globalForScheduler.schedulerStarted) {
+    return;
   }
+  
+  log("正在為開發環境啟動...");
+  globalForScheduler.schedulerStarted = true;
+
+  // 1. 系統啟動時立即執行所有任務
+  log("系統啟動，立即執行所有任務...");
+  [...TEN_MINUTE_JOBS, ...HOURLY_JOBS, DAILY_RESERVE_JOB].forEach(triggerEndpoint);
+
+  // 2. 設定每 10 分鐘的排程 (generator-ingest)
+  cron.schedule('*/10 * * * *', () => {
+    log("每 10 分鐘排程：開始執行任務...");
+    TEN_MINUTE_JOBS.forEach(triggerEndpoint);
+  });
+
+  // 3. 設定每小時的排程 (weather-ingest)
+  cron.schedule('0 * * * *', () => {
+    log("每小時排程：開始執行任務...");
+    HOURLY_JOBS.forEach(triggerEndpoint);
+  });
+
+  // 4. 設定每日 19:30 的排程 (reserve-ingest)
+  cron.schedule('30 19 * * *', () => {
+    log("每日 19:30 排程：開始執行任務...");
+    triggerEndpoint(DAILY_RESERVE_JOB);
+  }, {
+    timezone: "Asia/Taipei"
+  });
+
+
+  log(`已啟動。首次任務已執行，並已設定多個排程：`);
+  console.log(`  - 每 10 分鐘: ${TEN_MINUTE_JOBS.join(', ')}`);
+  console.log(`  - 每小時: ${HOURLY_JOBS.join(', ')}`);
+  console.log(`  - 每日 19:30: ${DAILY_RESERVE_JOB}`);
 }

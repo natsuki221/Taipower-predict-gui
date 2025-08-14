@@ -53,3 +53,4 @@ api_keys.txt
 secrets.json
 config/secrets.py
 dev/scripts/response_1754903046461.json
+dev/OperatingReserve/*
