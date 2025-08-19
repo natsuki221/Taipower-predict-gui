@@ -1,7 +1,15 @@
+/**
+ * @file reserve-import.ts
+ * @description 台電備用容量歷史資料匯入腳本，將舊 CSV 檔案轉換為 ReserveType 格式並儲存到 MongoDB。
+ * @author natsuki221
+ * @version 1.0.0
+ */
+
 import fs from "fs/promises";
 import path from "path";
-import { connectToDatabase } from "../../lib/mongodb"; // 確保路徑正確
-import { ReserveType } from "../../lib/reserve-type"; // 確保路徑正確
+import { connectToDatabase } from "../../lib/utils/mongodb"; // 確保路徑正確
+import { ReserveType } from "../../lib/types/reserve-type"; // 確保路徑正確
+import { logger } from "@/lib/utils/logger";
 
 const COLLECTION_NAME = "reserve-doc-history";
 
@@ -62,18 +70,21 @@ const historicalDataAdapter = (
  * 主執行函數
  */
 async function importHistoricalData() {
-  console.log("--- 開始匯入歷史備轉容量資料 ---");
+  // console.log("--- 開始匯入歷史備轉容量資料 ---");
+  logger.info("--- 開始匯入歷史備轉容量資料 ---");
 
   try {
     const allRecordsToInsert: ReserveType[] = [];
 
     // 2. 讀取並轉換所有檔案
     for (const filePath of HISTORICAL_FILES) {
-      console.log(`正在處理檔案: ${filePath}...`);
+      // console.log(`正在處理檔案: ${filePath}...`);
+      logger.info(`正在處理檔案: ${filePath}...`);
 
       const yearMatch = filePath.match(/reserve(\d{4})\.csv$/);
       if (!yearMatch) {
-        console.warn(`警告：無法從檔名 ${filePath} 解析年份，已跳過。`);
+        // console.warn(`警告：無法從檔名 ${filePath} 解析年份，已跳過。`);
+        logger.warn(`警告：無法從檔名 ${filePath} 解析年份，已跳過。`);
         continue;
       }
       const year = parseInt(yearMatch[1], 10);
@@ -83,16 +94,24 @@ async function importHistoricalData() {
 
       const adaptedData = historicalDataAdapter(csvData, year);
       allRecordsToInsert.push(...adaptedData);
-      console.log(
-        `  -> 從 ${year} 年的資料中成功轉換 ${adaptedData.length} 筆紀錄。`
+      // console.log(
+      //   `  -> 從 ${year} 年的資料中成功轉換 ${adaptedData.length} 筆紀錄。`
+      // );
+      logger.info(
+        `  -> 從 ${year} 年的資料中成功轉換 ${adaptedData.length} 筆紀錄。
+      `
       );
     }
 
     if (allRecordsToInsert.length === 0) {
-      console.log("沒有找到任何可匯入的紀錄。腳本執行完畢。");
+      // console.log("沒有找到任何可匯入的紀錄。腳本執行完畢。");
+      logger.info("沒有找到任何可匯入的紀錄。腳本執行完畢。");
       return;
     }
-    console.log(
+    // console.log(
+    //   `\n總共轉換了 ${allRecordsToInsert.length} 筆紀錄，準備寫入資料庫...`
+    // );
+    logger.info(
       `\n總共轉換了 ${allRecordsToInsert.length} 筆紀錄，準備寫入資料庫...`
     );
 
@@ -117,24 +136,36 @@ async function importHistoricalData() {
     // 5. 批次插入新資料
     if (newRecords.length > 0) {
       await collection.insertMany(newRecords);
-      console.log(
+      // console.log(
+      //   `\n成功！已將 ${newRecords.length} 筆新紀錄匯入到 '${COLLECTION_NAME}' 集合中。`
+      // );
+      logger.info(
         `\n成功！已將 ${newRecords.length} 筆新紀錄匯入到 '${COLLECTION_NAME}' 集合中。`
       );
-      console.log(
+      // console.log(
+      //   `（${
+      //     allRecordsToInsert.length - newRecords.length
+      //   } 筆紀錄因重複而跳過）`
+      // );
+      logger.info(
         `（${
           allRecordsToInsert.length - newRecords.length
         } 筆紀錄因重複而跳過）`
       );
     } else {
-      console.log("\n所有紀錄皆已存在於資料庫中，無需新增。");
+      // console.log("\n所有紀錄皆已存在於資料庫中，無需新增。");
+      logger.info("\n所有紀錄皆已存在於資料庫中，無需新增。");
     }
   } catch (error) {
-    console.error("\n匯入過程中發生錯誤:", error);
+    // console.error("\n匯入過程中發生錯誤:", error);
+    logger.error("\n匯入過程中發生錯誤:", error);
   } finally {
-    console.log("--- 歷史資料匯入腳本執行完畢 ---");
+    // console.log("--- 歷史資料匯入腳本執行完畢 ---");
+    logger.info("--- 歷史資料匯入腳本執行完畢 ---");
   }
 }
 
 // 執行腳本
 importHistoricalData();
-console.log("--- 歷史資料匯入腳本執行完畢 ---");
+// console.log("--- 歷史資料匯入腳本執行完畢 ---");
+logger.info("--- 歷史資料匯入腳本執行完畢 ---");

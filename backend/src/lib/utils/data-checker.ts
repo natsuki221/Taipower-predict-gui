@@ -7,6 +7,7 @@
 
 import { connectToDatabase } from "./mongodb";
 import { Collection, Document } from "mongodb";
+import { logger } from "./logger";
 
 /**
  * 資料檢查結果介面
@@ -81,8 +82,11 @@ export const documentExists = async (
 
     // 性能監控：如果查詢時間超過 100ms，建議檢查索引
     if (queryTime > 100) {
-      console.warn(
-        `⚠️  ${collectionName} 集合的 DateTime 查詢耗時 ${queryTime}ms，建議建立索引`
+      // console.warn(
+      //   `⚠️  ${collectionName} 集合的 DateTime 查詢耗時 ${queryTime}ms，建議建立索引`
+      // );
+      logger.warn(
+        `[Data Checker] ⚠️  ${collectionName} 集合的 DateTime 查詢耗時 ${queryTime}ms，建議建立索引`
       );
     }
 
@@ -95,8 +99,12 @@ export const documentExists = async (
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(
-      `❌ 在 ${collectionName} 中檢查文件時發生錯誤:`,
+    // console.error(
+    //   `❌ 在 ${collectionName} 中檢查文件時發生錯誤:`,
+    //   errorMessage
+    // );
+    logger.error(
+      `[Data Checker] ❌ 在 ${collectionName} 中檢查文件時發生錯誤:`,
       errorMessage
     );
 
@@ -154,7 +162,8 @@ export const batchDocumentExists = async (
 
     return result;
   } catch (error) {
-    console.error(`批量檢查 ${collectionName} 時發生錯誤:`, error);
+    // console.error(`批量檢查 ${collectionName} 時發生錯誤:`, error);
+    logger.error(`[Data Checker] 批量檢查 ${collectionName} 時發生錯誤:`, error);
     // 錯誤時返回空的 Map
     return new Map();
   }

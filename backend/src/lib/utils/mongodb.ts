@@ -6,6 +6,7 @@
  */
 
 import { MongoClient, Db } from "mongodb";
+import { logger } from "./logger";
 
 /**
  * MongoDB 連線 URI，優先使用本地開發環境，生產環境使用伺服器 URL
@@ -80,10 +81,12 @@ export async function connectToDatabase(): Promise<DatabaseConnection> {
     cachedClient = client;
     cachedDb = db;
 
-    console.log(`✅ MongoDB 連線成功: ${MONGODB_DB_NAME}`);
+    // console.log(`✅ MongoDB 連線成功: ${MONGODB_DB_NAME}`);
+    logger.info(`[MongoDB] ✅ MongoDB 連線成功: ${MONGODB_DB_NAME}`);
     return { client, db };
   } catch (error) {
-    console.error("❌ MongoDB 連線失敗:", error);
+    // console.error("❌ MongoDB 連線失敗:", error);
+    logger.error("[MongoDB] ❌ MongoDB 連線失敗:", error);
     throw new Error(
       `無法連線至 MongoDB: ${
         error instanceof Error ? error.message : String(error)

@@ -3,7 +3,6 @@
  * @description 提供將 CWA API 原始天氣資料轉換為統一的 WeatherSnapshot 格式的適配器。
  * @author natsuki221
  * @version 3.0.0
- * @date 2025-08-11
  */
 
 import {
@@ -11,7 +10,9 @@ import {
   CwaApiStation,
   WeatherSnapshot,
   StationData,
-} from "./weather-types";
+} from "../types/weather-types";
+import { logger } from "../utils/logger";
+
 
 // =================================================================
 // 1. 常數與輔助函式 (Constants & Helper Functions)
@@ -62,7 +63,8 @@ export const adaptCwaDataToSnapshot = (
   );
 
   if (allStations.length === 0) {
-    console.warn("[Adapter] No station data found in API responses.");
+    // console.warn("[Weather Adapter] No station data found in API responses.");
+    logger.warn("[Weather Adapter] No station data found in API responses.");
     return null;
   }
 
@@ -71,7 +73,8 @@ export const adaptCwaDataToSnapshot = (
     (s) => s.ObsTime && s.ObsTime.DateTime
   );
   if (!firstValidRecord) {
-    console.warn("[Adapter] No valid observation time found in any record.");
+    // console.warn("[Weather Adapter] No valid observation time found in any record.");
+    logger.warn("[Weather Adapter] No valid observation time found in any record.");
     return null;
   }
   const snapshotTimestamp = new Date(firstValidRecord.ObsTime.DateTime);

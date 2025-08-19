@@ -1,7 +1,15 @@
+/**
+ * @file reserve-ingest/route.ts
+ * @description 台電備用容量資料擷取 API 端點
+ * @author natsuki221
+ * @version 2.0.0
+ */
+
 import { NextResponse } from "next/server";
-import { connectToDatabase } from "@/lib/mongodb";
-import { reserveAdapter } from "@/lib/reserve-adapter";
-import { ReserveType } from "@/lib/reserve-type";
+import { connectToDatabase } from "@/lib/utils/mongodb";
+import { reserveAdapter } from "@/lib/adapters/reserve-adapter";
+import { ReserveType } from "@/lib/types/reserve-type";
+import { logger } from "@/lib/utils/logger";
 
 const COLLECTION_NAME = "reserve-doc";
 
@@ -11,11 +19,14 @@ const COLLECTION_NAME = "reserve-doc";
  * @returns 一個包含操作結果的物件
  */
 async function ingestData() {
-  console.log("[IngestJob] 開始執行 reserve-ingest 任務...");
+  // console.log("[Reserve Ingest] 開始執行 reserve-ingest 任務...");
+  logger.info("[Reserve Ingest] 開始執行 reserve-ingest 任務...");
+
   // 1. 從外部 API 獲取並轉換資料
   const apiUrl = process.env.RESERVE_API_URL;
   if (!apiUrl) {
-    console.error("錯誤：環境變數 RESERVE_API_URL 未設定。");
+    // console.error("錯誤：環境變數 RESERVE_API_URL 未設定。");
+    logger.error("錯誤：環境變數 RESERVE_API_URL 未設定。");
     throw new Error("伺服器設定不完整：RESERVE_API_URL 未設定。");
   }
 
@@ -28,7 +39,8 @@ async function ingestData() {
   const adaptedData = reserveAdapter(csvData);
 
   if (!adaptedData || adaptedData.length === 0) {
-    console.log("[IngestJob] 來源無資料或無需更新。");
+    // console.log("[Reserve Ingest] 來源無資料或無需更新。");
+    logger.info("[Reserve Ingest] 來源無資料或無需更新。");
     return {
       success: true,
       message: "來源無資料，或資料已是最新，無需處理。",
@@ -71,7 +83,8 @@ async function ingestData() {
     duplicateCount: adaptedData.length - recordsToInsert.length,
     totalSourceRecords: adaptedData.length,
   };
-  console.log("[IngestJob] reserve-ingest 任務完成:", result);
+  // console.log("[Reserve Ingest] reserve-ingest 任務完成:", result);
+  logger.info("[Reserve Ingest] 任務完成:", result);
   return result;
 }
 
@@ -84,7 +97,8 @@ export async function GET() {
     const result = await ingestData();
     return NextResponse.json(result);
   } catch (error) {
-    console.error("手動觸發資料擷取過程中發生錯誤:", error);
+    // console.error("手動觸發資料擷取過程中發生錯誤:", error);
+    logger.error("[Reserve Ingest] 手動觸發資料擷取過程中發生錯誤:", error);
     const errorMessage =
       error instanceof Error ? error.message : "發生未知錯誤";
     return NextResponse.json(
@@ -99,7 +113,8 @@ export async function POST() {
     const result = await ingestData();
     return NextResponse.json(result);
   } catch (error) {
-    console.error("手動觸發資料擷取過程中發生錯誤:", error);
+    // console.error("手動觸發資料擷取過程中發生錯誤:", error);
+    logger.error("[Reserve Ingest] 手動觸發資料擷取過程中發生錯誤:", error);
     const errorMessage =
       error instanceof Error ? error.message : "發生未知錯誤";
     return NextResponse.json(

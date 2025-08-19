@@ -17,7 +17,8 @@
     "node-cron": "^4.2.1",
     "node-fetch": "^3.3.2",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -26,6 +27,7 @@
     "@types/node-fetch": "^2.6.13",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/winston": "^2.4.4",
     "dotenv-cli": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.4.5",

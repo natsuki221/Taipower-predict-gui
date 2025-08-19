@@ -1,14 +1,15 @@
 /**
- * @file route.ts (generator-ingest)
+ * @file generator-ingest/route.ts
  * @description 台電發電機組資料擷取 API 端點
  * @author natsuki221
  * @version 2.0.0
  */
 
 import { NextResponse } from "next/server";
-import { connectToDatabase } from "@/lib/mongodb";
-import { taipowerApiAdapter } from "@/lib/taipower-adapters";
-import { TaipowerRawData } from "@/lib/taipower-types";
+import { connectToDatabase } from "@/lib/utils/mongodb";
+import { taipowerApiAdapter } from "@/lib/adapters/taipower-adapters";
+import { TaipowerRawData } from "@/lib/types/taipower-types";
+import { logger } from "@/lib/utils/logger";
 
 /**
  * 台電發電機組資料 API URL
@@ -51,8 +52,9 @@ async function ingestData() {
     DateTime: transformedData.DateTime,
   });
   if (count > 0) {
-    const message = `偵測到重複的發電資料，將跳過寫入。時間點: ${transformedData.DateTime}`;
-    console.log(message);
+    const message = `[Generating Unit Ingest] 偵測到重複的發電資料，將跳過寫入。時間點: ${transformedData.DateTime}`;
+    // console.log(message);
+    logger.warn(message);
     return { message, status: 200 }; // 200 OK 表示成功處理，但無操作
   }
 
@@ -68,7 +70,8 @@ async function ingestData() {
         granularity: "minutes",
       },
     });
-    console.log(`成功建立時間序列集合: ${COLLECTION_NAME}`);
+    // console.log(`成功建立時間序列集合: ${COLLECTION_NAME}`);
+    logger.info(`[Generating Unit Ingest] 成功建立時間序列集合: ${COLLECTION_NAME}`);
   }
 
   // 7. 寫入資料
@@ -88,7 +91,8 @@ async function ingestData() {
  * GET 請求處理器，供排程呼叫。
  */
 export async function GET() {
-  console.log("發電資料擷取排程已啟動。");
+  // console.log("發電資料擷取排程已啟動。");
+  logger.info("[Generating Unit Ingest] 發電資料擷取排程已啟動。");
   try {
     const result = await ingestData();
     return NextResponse.json(
@@ -97,7 +101,8 @@ export async function GET() {
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("發電資料擷取排程發生錯誤:", errorMessage);
+    // console.error("發電資料擷取排程發生錯誤:", errorMessage);
+    logger.error("[Generating Unit Ingest] 發電資料擷取排程發生錯誤:", errorMessage);
     return NextResponse.json(
       { message: "發電資料擷取排程發生錯誤", error: errorMessage },
       { status: 500 }
@@ -109,7 +114,8 @@ export async function GET() {
  * POST 請求處理器，供手動觸發。
  */
 export async function POST() {
-  console.log("手動觸發發電資料擷取。");
+  // console.log("手動觸發發電資料擷取。");
+  logger.info("[Generating Unit Ingest] 手動觸發發電資料擷取。");
   try {
     const result = await ingestData();
     return NextResponse.json(
@@ -118,7 +124,8 @@ export async function POST() {
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Failed to ingest Taipower data:", error);
+    // console.error("Failed to ingest Taipower data:", error);
+    logger.error("[Generating Unit Ingest] Failed to ingest Taipower data:", errorMessage);
     return NextResponse.json(
       { message: "Failed to ingest Taipower data", error: errorMessage },
       { status: 500 }

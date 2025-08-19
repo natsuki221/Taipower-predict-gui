@@ -1,5 +1,14 @@
+/**
+ * @file local-scheduler.ts
+ * @description 本地排程器，用於開發環境下定期觸發 API 任務。
+ * @description 注意：此排程器僅適用於開發環境，生產環境應使用 Vercel Cron Jobs 或其他外部排程服務
+ * @author natsuki221
+ * @version 1.0.0
+ */
+
 import fetch from "node-fetch";
 import cron from 'node-cron';
+import { logger } from "../utils/logger";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -17,13 +26,15 @@ const globalForScheduler = globalThis as unknown as {
 // 增強的日誌記錄器，自動加入時間戳記
 // =================================================================
 const log = (message: string, ...args: unknown[]) => {
-    const timestamp = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
-    console.log(`[${timestamp}] [LocalScheduler] ${message}`, ...args);
+    // const timestamp = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+    // console.log(`[${timestamp}] [LocalScheduler] ${message}`, ...args);
+    logger.info(`[LocalScheduler] ${message}`, ...args);
 };
 
 const error = (message: string, ...args: unknown[]) => {
-    const timestamp = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
-    console.error(`[${timestamp}] [LocalScheduler] ERROR: ${message}`, ...args);
+    // const timestamp = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+    // console.error(`[${timestamp}] [LocalScheduler] ERROR: ${message}`, ...args);
+    logger.error(` [LocalScheduler] ERROR: ${message}`, ...args);
 };
 
 
@@ -98,7 +109,10 @@ export function startLocalScheduler(): void {
 
 
   log(`已啟動。首次任務已執行，並已設定多個排程：`);
-  console.log(`  - 每 10 分鐘: ${TEN_MINUTE_JOBS.join(', ')}`);
-  console.log(`  - 每小時: ${HOURLY_JOBS.join(', ')}`);
-  console.log(`  - 每日 19:30: ${DAILY_RESERVE_JOB}`);
+  // console.log(`  - 每 10 分鐘: ${TEN_MINUTE_JOBS.join(', ')}`);
+  // console.log(`  - 每小時: ${HOURLY_JOBS.join(', ')}`);
+  // console.log(`  - 每日 19:30: ${DAILY_RESERVE_JOB}`);
+  logger.info(` [Local Scheduler] - 每 10 分鐘: ${TEN_MINUTE_JOBS.join(', ')}`);
+  logger.info(` [Local Scheduler] - 每小時: ${HOURLY_JOBS.join(', ')}`);
+  logger.info(` [Local Scheduler] - 每日 19:30: ${DAILY_RESERVE_JOB}`);
 }

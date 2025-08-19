@@ -1,19 +1,19 @@
 /**
- * @file /src/app/api/weather-ingest/route.ts
+ * @file weather-ingest/route.ts
  * @description Next.js API 路由，用於從 CWA 擷取天氣資料、轉換並以快照形式存入 MongoDB。
  * @author natsuki221
  * @version 3.0.0
- * @date 2025-08-11
  */
 
 import { NextResponse } from "next/server";
-import { connectToDatabase } from "@/lib/mongodb";
+import { connectToDatabase } from "@/lib/utils/mongodb";
 import {
   CwaApiResponse,
   CwaApiStation,
   WeatherSnapshot,
-} from "@/lib/weather-types";
-import { adaptCwaDataToSnapshot } from "@/lib/weather-adapter";
+} from "@/lib/types/weather-types";
+import { adaptCwaDataToSnapshot } from "@/lib/adapters/weather-adapter";
+import { logger } from "@/lib/utils/logger";
 
 // =================================================================
 // 1. 常數與設定 (Constants & Configuration)
@@ -42,7 +42,8 @@ const COLLECTION_NAME = "weather-snapshots";
  * 執行資料擷取、轉換和儲存的核心函式。
  */
 async function ingestWeatherData() {
-  console.log("[Weather Ingest] 開始從 CWA API 擷取資料...");
+  // console.log("[Weather Ingest] 開始從 CWA API 擷取資料...");
+  logger.info("[Weather Ingest] 開始從 CWA API 擷取資料...");
 
   // 運行時環境變數驗證
   if (!CWA_API_KEY) {
@@ -77,11 +78,17 @@ async function ingestWeatherData() {
 
   if (!snapshot || snapshot.stations.length === 0) {
     const message = "[Weather Ingest] 轉換後無有效測站資料可供儲存。";
-    console.log(message);
+    // console.log(message);
+    logger.info(message);
     return { message, status: 200, insertedCount: 0 };
   }
 
-  console.log(
+  // console.log(
+  //   `[Weather Ingest] 成功轉換 ${
+  //     snapshot.stations.length
+  //   } 筆測站資料，時間戳記: ${snapshot.timestamp.toISOString()}`
+  // );
+  logger.info(
     `[Weather Ingest] 成功轉換 ${
       snapshot.stations.length
     } 筆測站資料，時間戳記: ${snapshot.timestamp.toISOString()}`
@@ -98,14 +105,16 @@ async function ingestWeatherData() {
 
   if (existingDoc) {
     const message = `[Weather Ingest] 偵測到重複的時間戳記 (${snapshot.timestamp.toISOString()})，跳過寫入。`;
-    console.log(message);
+    // console.log(message);
+    logger.warn(message);
     return { message, status: 200, insertedCount: 0 };
   }
 
   // 插入新的快照文件
   const result = await collection.insertOne(snapshot);
   const message = `[Weather Ingest] 成功將天氣快照寫入資料庫，文件 ID: ${result.insertedId}`;
-  console.log(message);
+  // console.log(message);
+  logger.info(message);
 
   return {
     message,
@@ -123,7 +132,8 @@ async function ingestWeatherData() {
  * GET 請求處理器，主要用於 Vercel Cron Job 或其他排程器自動觸發。
  */
 export async function GET() {
-  console.log("[Weather Ingest] GET 請求觸發資料擷取...");
+  // console.log("[Weather Ingest] GET 請求觸發資料擷取...");
+  logger.info("[Weather Ingest] GET 請求觸發資料擷取...");
   try {
     const result = await ingestWeatherData();
     return NextResponse.json(
@@ -138,7 +148,8 @@ export async function GET() {
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "發生未知錯誤";
-    console.error("[Weather Ingest] 處理 GET 請求時發生嚴重錯誤:", error);
+    // console.error("[Weather Ingest] 處理 GET 請求時發生嚴重錯誤:", error);
+    logger.error("[Weather Ingest] 處理 GET 請求時發生嚴重錯誤:", errorMessage);
     return NextResponse.json(
       { success: false, error: errorMessage },
       { status: 500 }
@@ -150,7 +161,8 @@ export async function GET() {
  * POST 請求處理器，方便手動觸發和測試。
  */
 export async function POST() {
-  console.log("[Weather Ingest] POST 請求 (手動) 觸發資料擷取...");
+  // console.log("[Weather Ingest] POST 請求 (手動) 觸發資料擷取...");
+  logger.info("[Weather Ingest] POST 請求 (手動) 觸發資料擷取...");
   try {
     const result = await ingestWeatherData();
     return NextResponse.json(
@@ -165,7 +177,8 @@ export async function POST() {
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "發生未知錯誤";
-    console.error("[Weather Ingest] 處理 POST 請求時發生嚴重錯誤:", error);
+    // console.error("[Weather Ingest] 處理 POST 請求時發生嚴重錯誤:", error);
+    logger.error("[Weather Ingest] 處理 POST 請求時發生嚴重錯誤:", errorMessage);
     return NextResponse.json(
       { success: false, error: errorMessage },
       { status: 500 }

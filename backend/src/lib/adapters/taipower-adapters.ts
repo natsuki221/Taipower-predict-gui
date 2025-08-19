@@ -9,7 +9,8 @@ import {
   TaipowerRawData,
   PowerGenerationSnapshot,
   UnitData,
-} from "./taipower-types";
+} from "../types/taipower-types";
+import { logger } from "../utils/logger";
 
 /**
  * 安全地將台電 API 返回的數值字串轉換為數字
@@ -43,7 +44,8 @@ const parseNumericValue = (value: string): number | null => {
     const number = parseFloat(cleanedValue);
     return isNaN(number) ? null : number;
   } catch (error) {
-    console.warn(`無法解析數值: "${value}"`, error);
+    // console.warn(`無法解析數值: "${value}"`, error);
+    logger.warn(`無法解析數值: "${value}"`, error);
     return null;
   }
 };
@@ -111,7 +113,8 @@ export function taipowerApiAdapter(
 
       units.push(unitData);
     } catch (error) {
-      console.warn(`處理機組資料時發生錯誤: ${item["機組名稱"]}`, error);
+      // console.warn(`處理機組資料時發生錯誤: ${item["機組名稱"]}`, error);
+      logger.warn(`處理機組資料時發生錯誤: ${item["機組名稱"]}`, error);
       // 繼續處理其他機組，不因單一機組錯誤而中斷整個轉換過程
       continue;
     }
@@ -126,8 +129,14 @@ export function taipowerApiAdapter(
     units,
   };
 
-  console.log(
-    `台電資料適配完成: ${units.length} 個機組，時間: ${DateTime.toISOString()}`
+  // console.log(
+  //   `台電資料適配完成: ${units.length} 個機組，時間: ${DateTime.toISOString()}`
+  // );
+  // console.log(
+  //   `台電資料適配完成: ${units.length} 個機組，時間: ${DateTime.toISOString()}`
+  // );
+  logger.info(
+    `[Generating Unit Adapter]台電資料適配完成: ${units.length} 個機組，時間: ${DateTime.toISOString()}`
   );
   return snapshot;
 }
