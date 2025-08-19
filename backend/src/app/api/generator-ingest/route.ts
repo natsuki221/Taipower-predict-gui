@@ -1,7 +1,7 @@
 /**
  * @file route.ts (generator-ingest)
  * @description 台電發電機組資料擷取 API 端點
- * @author 資深軟體工程師
+ * @author natsuki221
  * @version 2.0.0
  */
 

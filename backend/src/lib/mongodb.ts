@@ -1,7 +1,7 @@
 /**
  * @file mongodb.ts
  * @description MongoDB 資料庫連線管理模組，使用單例模式確保連線效率
- * @author 資深軟體工程師
+ * @author natsuki221
  * @version 2.0.0
  */
 
@@ -10,7 +10,8 @@ import { MongoClient, Db } from "mongodb";
 /**
  * MongoDB 連線 URI，優先使用本地開發環境，生產環境使用伺服器 URL
  */
-const MONGODB_URI: string | undefined = process.env.DB_LOCAL_URL || process.env.DB_SERVER_URL;
+const MONGODB_URI: string | undefined =
+  process.env.DB_LOCAL_URL || process.env.DB_SERVER_URL;
 
 /**
  * MongoDB 資料庫名稱
@@ -39,13 +40,13 @@ export interface DatabaseConnection {
 
 /**
  * 建立或取得快取的 MongoDB 資料庫連線
- * 
+ *
  * 使用單例模式確保在 Next.js 開發環境的熱重載過程中，
  * 不會建立過多的資料庫連線，提升開發效率並避免連線池耗盡
- * 
+ *
  * @returns {Promise<DatabaseConnection>} 包含 MongoDB 客戶端和資料庫實例的物件
  * @throws {Error} 當連線失敗時拋出錯誤
- * 
+ *
  * @example
  * ```typescript
  * const { db, client } = await connectToDatabase();
@@ -66,9 +67,7 @@ export async function connectToDatabase(): Promise<DatabaseConnection> {
   }
 
   if (!MONGODB_DB_NAME) {
-    throw new Error(
-      "請在 .env 檔案中定義 DB_NAME 環境變數"
-    );
+    throw new Error("請在 .env 檔案中定義 DB_NAME 環境變數");
   }
 
   try {
@@ -86,7 +85,9 @@ export async function connectToDatabase(): Promise<DatabaseConnection> {
   } catch (error) {
     console.error("❌ MongoDB 連線失敗:", error);
     throw new Error(
-      `無法連線至 MongoDB: ${error instanceof Error ? error.message : String(error)}`
+      `無法連線至 MongoDB: ${
+        error instanceof Error ? error.message : String(error)
+      }`
     );
   }
 }

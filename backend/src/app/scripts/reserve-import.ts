@@ -11,13 +11,13 @@ const COLLECTION_NAME = "reserve-doc-history";
 // 將您的舊 CSV 檔案路徑放在這裡。
 // 腳本會從檔名中自動解析年份 (例如 'reserve2023.csv' -> 2023)`
 const HISTORICAL_FILES: string[] = [
-  "./dev/OperatingReserveData/reserve2018.csv",
-  "./dev/OperatingReserveData/reserve2019.csv",
-  "./dev/OperatingReserveData/reserve2020.csv",
-  "./dev/OperatingReserveData/reserve2021.csv",
-  "./dev/OperatingReserveData/reserve2022.csv",
-  "./dev/OperatingReserveData/reserve2023.csv",
-  "./dev/OperatingReserveData/reserve2024.csv",
+  "../dev/OperatingReserve/reserve2018.csv",
+  "../dev/OperatingReserve/reserve2019.csv",
+  "../dev/OperatingReserve/reserve2020.csv",
+  "../dev/OperatingReserve/reserve2021.csv",
+  "../dev/OperatingReserve/reserve2022.csv",
+  "../dev/OperatingReserve/reserve2023.csv",
+  "../dev/OperatingReserve/reserve2024.csv",
 ];
 
 /**
@@ -138,6 +138,3 @@ async function importHistoricalData() {
 // 執行腳本
 importHistoricalData();
 console.log("--- 歷史資料匯入腳本執行完畢 ---");
-
-// 執行腳本
-importHistoricalData();

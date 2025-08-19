@@ -1,7 +1,7 @@
 /**
  * @file /src/lib/weather-adapter.ts
  * @description 提供將 CWA API 原始天氣資料轉換為統一的 WeatherSnapshot 格式的適配器。
- * @author 資深軟體工程師
+ * @author natsuki221
  * @version 3.0.0
  * @date 2025-08-11
  */
@@ -85,22 +85,57 @@ export const adaptCwaDataToSnapshot = (
       continue;
     }
 
-    const existingData: StationData = stationDataMap.get(record.StationId) as StationData || {} as StationData;
+    const existingData: StationData =
+      (stationDataMap.get(record.StationId) as StationData) ||
+      ({} as StationData);
 
     const station: StationData = {
       stationId: record.StationId,
       stationName: record.StationName,
       countyName: record.GeoInfo.CountyName,
       townName: record.GeoInfo.TownName,
-      weather: safeParseString(record.WeatherElement.Weather) ?? existingData.weather ?? null,
-      windDirection: safeParseFloat(record.WeatherElement.WindDirection) ?? existingData.windDirection ?? null,
-      windSpeed: safeParseFloat(record.WeatherElement.WindSpeed) ?? existingData.windSpeed ?? null,
-      airTemperature: safeParseFloat(record.WeatherElement.AirTemperature) ?? existingData.airTemperature ?? null,
-      relativeHumidity: safeParseFloat(record.WeatherElement.RelativeHumidity) ?? existingData.relativeHumidity ?? null,
-      airPressure: safeParseFloat(record.WeatherElement.AirPressure) ?? existingData.airPressure ?? null,
-      gustSpeed: safeParseFloat(record.WeatherElement.GustInfo?.PeakGustSpeed) ?? existingData.gustSpeed ?? null,
-      dailyHigh: safeParseFloat(record.WeatherElement.DailyExtreme?.DailyHigh?.TemperatureInfo.AirTemperature) ?? existingData.dailyHigh ?? null,
-      dailyLow: safeParseFloat(record.WeatherElement.DailyExtreme?.DailyLow?.TemperatureInfo.AirTemperature) ?? existingData.dailyLow ?? null,
+      weather:
+        safeParseString(record.WeatherElement.Weather) ??
+        existingData.weather ??
+        null,
+      windDirection:
+        safeParseFloat(record.WeatherElement.WindDirection) ??
+        existingData.windDirection ??
+        null,
+      windSpeed:
+        safeParseFloat(record.WeatherElement.WindSpeed) ??
+        existingData.windSpeed ??
+        null,
+      airTemperature:
+        safeParseFloat(record.WeatherElement.AirTemperature) ??
+        existingData.airTemperature ??
+        null,
+      relativeHumidity:
+        safeParseFloat(record.WeatherElement.RelativeHumidity) ??
+        existingData.relativeHumidity ??
+        null,
+      airPressure:
+        safeParseFloat(record.WeatherElement.AirPressure) ??
+        existingData.airPressure ??
+        null,
+      gustSpeed:
+        safeParseFloat(record.WeatherElement.GustInfo?.PeakGustSpeed) ??
+        existingData.gustSpeed ??
+        null,
+      dailyHigh:
+        safeParseFloat(
+          record.WeatherElement.DailyExtreme?.DailyHigh?.TemperatureInfo
+            .AirTemperature
+        ) ??
+        existingData.dailyHigh ??
+        null,
+      dailyLow:
+        safeParseFloat(
+          record.WeatherElement.DailyExtreme?.DailyLow?.TemperatureInfo
+            .AirTemperature
+        ) ??
+        existingData.dailyLow ??
+        null,
     };
 
     stationDataMap.set(record.StationId, station);

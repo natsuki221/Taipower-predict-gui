@@ -1,0 +1,114 @@
+{
+    "records": {
+        "CATALOG": "UNIT_NET_P",
+        "START_DATE": "2025-01-01T00:00:00",
+        "END_DATE": "2025-03-31T23:50:00",
+        "UNIT_OF_MEASUREMENT": "MW",
+        "INTERVAL": "10MIN",
+        "NET_P": [
+            {
+                "FUEL_TYPE": "核能",
+                "UNIT_NAME": "核三#1",
+                "DATETIME": "2025-01-01T00:00:00",
+                "NET_P": "0.0"
+            },
+            {
+                "FUEL_TYPE": "核能",
+                "UNIT_NAME": "核三#1",
+                "DATETIME": "2025-01-01T00:10:00",
+                "NET_P": "0.0"
+            },
+            {
+                "FUEL_TYPE": "核能",
+                "UNIT_NAME": "核三#1",
+                "DATETIME": "2025-01-01T00:20:00",
+                "NET_P": "0.0"
+            },
+            {
+                "FUEL_TYPE": "核能",
+                "UNIT_NAME": "核三#1",
+                "DATETIME": "2025-01-01T00:30:00",
+                "NET_P": "0.0"
+            },
+            {
+                "FUEL_TYPE": "核能",
+                "UNIT_NAME": "核三#1",
+                "DATETIME": "2025-01-01T00:40:00",
+                "NET_P": "0.0"
+            },
+            {
+                "FUEL_TYPE": "核能",
+                "UNIT_NAME": "核三#1",
+                "DATETIME": "2025-01-01T00:50:00",
+                "NET_P": "0.0"
+            },
+            {
+                "FUEL_TYPE": "核能",
+                "UNIT_NAME": "核三#1",
+                "DATETIME": "2025-01-01T01:00:00",
+                "NET_P": "0.0"
+            },
+            {
+                "FUEL_TYPE": "核能",
+                "UNIT_NAME": "核三#1",
+                "DATETIME": "2025-01-01T01:10:00",
+                "NET_P": "0.0"
+            },
+            {
+                "FUEL_TYPE": "核能",
+                "UNIT_NAME": "核三#1",
+                "DATETIME": "2025-01-01T01:20:00",
+                "NET_P": "0.0"
+            },
+            {
+                "FUEL_TYPE": "核能",
+                "UNIT_NAME": "核三#1",
+                "DATETIME": "2025-01-01T01:30:00",
+                "NET_P": "0.0"
+            },
+            {
+                "FUEL_TYPE": "核能",
+                "UNIT_NAME": "核三#1",
+                "DATETIME": "2025-01-01T01:40:00",
+                "NET_P": "0.0"
+            },
+            {
+                "FUEL_TYPE": "核能",
+                "UNIT_NAME": "核三#1",
+                "DATETIME": "2025-01-01T01:50:00",
+                "NET_P": "0.0"
+            },
+            {
+                "FUEL_TYPE": "核能",
+                "UNIT_NAME": "核三#1",
+                "DATETIME": "2025-01-01T02:00:00",
+                "NET_P": "0.0"
+            },
+            {
+                "FUEL_TYPE": "核能",
+                "UNIT_NAME": "核三#1",
+                "DATETIME": "2025-01-01T02:10:00",
+                "NET_P": "0.0"
+            },
+            {
+                "FUEL_TYPE": "核能",
+                "UNIT_NAME": "核三#1",
+                "DATETIME": "2025-01-01T02:20:00",
+                "NET_P": "0.0"
+            },
+            {
+                "FUEL_TYPE": "核能",
+                "UNIT_NAME": "核三#1",
+                "DATETIME": "2025-01-01T02:30:00",
+                "NET_P": "0.0"
+            },
+            {
+                "FUEL_TYPE": "核能",
+                "UNIT_NAME": "核三#1",
+                "DATETIME": "2025-01-01T02:40:00",
+                "NET_P": "0.0"
+            },
+            ...
+        ]
+    }
+}

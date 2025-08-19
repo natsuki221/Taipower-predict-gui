@@ -27,13 +27,13 @@
 
 ## 🚀 技術堆疊
 
-| 技術 | 版本 | 用途 |
-|------|------|------|
-| **Next.js** | 15.4.5 | Web 框架與 API 路由 |
-| **TypeScript** | ^5 | 型別安全的開發體驗 |
-| **MongoDB** | ^6.18.0 | 時間序列資料庫 |
-| **Node-cron** | ^4.2.1 | 任務排程 |
-| **Node-fetch** | ^3.3.2 | HTTP 客戶端 |
+| 技術           | 版本    | 用途                |
+| -------------- | ------- | ------------------- |
+| **Next.js**    | 15.4.5  | Web 框架與 API 路由 |
+| **TypeScript** | ^5      | 型別安全的開發體驗  |
+| **MongoDB**    | ^6.18.0 | 時間序列資料庫      |
+| **Node-cron**  | ^4.2.1  | 任務排程            |
+| **Node-fetch** | ^3.3.2  | HTTP 客戶端         |
 
 ## 📋 系統需求
 
@@ -66,15 +66,15 @@ NEXT_PUBLIC_APP_URL="http://localhost:3000" # 生產環境需修改
 
 ### 環境變數說明
 
-| 變數名稱 | 必要性 | 說明 |
-|----------|--------|-----------|
-| `DB_LOCAL_URL` | 擇一 | 本地 MongoDB 連線 URI |
-| `DB_SERVER_URL` | 擇一 | 遠端 MongoDB 連線 URI（如 Atlas） |
-| `DB_NAME` | 必要 | MongoDB 資料庫名稱 |
-| `WEATHER_API_KEY` | 必要 | 中央氣象署開放資料 API 金鑰 |
-| `INTERNAL_API_KEY` | 建議 | 內部 API 授權金鑰（生產環境安全性） |
-| `GENERATING_UNITS_DATA` | 必要 | 台電發電機組資料 API URL |
-| `RESERVE_API_URL` | 必要 | 台電備轉容量資料 CSV URL |
+| 變數名稱                | 必要性 | 說明                                |
+| ----------------------- | ------ | ----------------------------------- |
+| `DB_LOCAL_URL`          | 擇一   | 本地 MongoDB 連線 URI               |
+| `DB_SERVER_URL`         | 擇一   | 遠端 MongoDB 連線 URI（如 Atlas）   |
+| `DB_NAME`               | 必要   | MongoDB 資料庫名稱                  |
+| `WEATHER_API_KEY`       | 必要   | 中央氣象署開放資料 API 金鑰         |
+| `INTERNAL_API_KEY`      | 建議   | 內部 API 授權金鑰（生產環境安全性） |
+| `GENERATING_UNITS_DATA` | 必要   | 台電發電機組資料 API URL            |
+| `RESERVE_API_URL`       | 必要   | 台電備轉容量資料 CSV URL            |
 
 ## 🛠️ 安裝與啟動
 
@@ -104,11 +104,11 @@ npm run dev
 
 ### 資料擷取端點
 
-| 端點 | 方法 | 功能 | 排程頻率 |
-|------|------|------|----------|
+| 端點                    | 方法     | 功能                     | 排程頻率   |
+| ----------------------- | -------- | ------------------------ | ---------- |
 | `/api/generator-ingest` | POST/GET | 擷取台電發電機組即時資料 | 每 10 分鐘 |
-| `/api/weather-ingest` | POST/GET | 擷取氣象署測站觀測資料 | 每小時 |
-| `/api/reserve-ingest` | POST/GET | 擷取電力系統備轉容量資料 | 每日 19:30 |
+| `/api/weather-ingest`   | POST/GET | 擷取氣象署測站觀測資料   | 每小時     |
+| `/api/reserve-ingest`   | POST/GET | 擷取電力系統備轉容量資料 | 每日 19:30 |
 
 ### 使用範例
 
@@ -388,6 +388,6 @@ curl "https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorizatio
 
 **版本資訊**: 2.0.0  
 **最後更新**: 2024-08-14  
-**維護者**: 資深軟體工程師
+**維護者**: natsuki221
 
 > 🔔 **提醒**：本系統處理的是即時電力與氣象資料，請確保在生產環境中具備適當的監控和備份機制。

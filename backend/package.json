@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "dev:scheduler": "npx ts-node --project tsconfig.json src/scripts/local-scheduler.ts"
+    "dev:scheduler": "npx tsx src/scripts/local-scheduler.ts",
+    "import:reserve": "dotenv -e ../.env -- npx tsx src/app/scripts/reserve-import.ts"
   },
   "dependencies": {
     "dotenv": "^17.2.1",

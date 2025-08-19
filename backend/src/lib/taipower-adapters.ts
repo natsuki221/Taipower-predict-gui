@@ -1,7 +1,7 @@
 /**
  * @file taipower-adapters.ts
  * @description 台電開放資料 API 適配器，負責將原始發電機組資料轉換為標準化格式
- * @author 資深軟體工程師
+ * @author natsuki221
  * @version 2.1.0
  */
 
@@ -13,12 +13,12 @@ import {
 
 /**
  * 安全地將台電 API 返回的數值字串轉換為數字
- * 
+ *
  * 處理台電 API 中常見的無效值標記（如 "-"、"N/A"）和包含括號的註解資訊
- * 
+ *
  * @param {string} value - 來自台電 API 的原始數值字串
  * @returns {number | null} 轉換後的數字，無法轉換時返回 null
- * 
+ *
  * @example
  * ```typescript
  * parseNumericValue("123.45")     // 返回: 123.45
@@ -36,7 +36,7 @@ const parseNumericValue = (value: string): number | null => {
   ) {
     return null;
   }
-  
+
   try {
     // 移除括號內的註解資訊並清理空白字符
     const cleanedValue = value.replace(/\(.*?\)/g, "").trim();
@@ -50,15 +50,15 @@ const parseNumericValue = (value: string): number | null => {
 
 /**
  * 台電 API 原始資料適配器
- * 
+ *
  * 將從台電開放資料平台獲取的發電機組即時資料轉換為統一的 PowerGenerationSnapshot 格式，
  * 便於後續資料分析和儲存至 MongoDB 時間序列集合
- * 
+ *
  * @param {TaipowerRawData} rawData - 從台電 API 獲取的原始 JSON 資料
  * @returns {PowerGenerationSnapshot} 轉換後的標準化發電快照資料
  * @throws {Error} 當 DateTime 欄位無效或缺失時拋出錯誤
  * @throws {Error} 當日期時間無法正確解析時拋出錯誤
- * 
+ *
  * @example
  * ```typescript
  * const rawData = await fetch('taipower-api-url').then(res => res.json());
@@ -79,9 +79,7 @@ export function taipowerApiAdapter(
   const DateTime = new Date(`${rawData.DateTime}Z`);
 
   if (isNaN(DateTime.getTime())) {
-    throw new Error(
-      `無法解析台電 API 提供的時間格式: "${rawData.DateTime}"`
-    );
+    throw new Error(`無法解析台電 API 提供的時間格式: "${rawData.DateTime}"`);
   }
 
   // 驗證原始資料結構
@@ -94,9 +92,11 @@ export function taipowerApiAdapter(
   // 遍歷所有機組資料並進行轉換
   for (const item of rawData.aaData) {
     // 跳過無效記錄和小計行
-    if (!item["機組名稱"] || 
-        item["機組名稱"].includes("小計") || 
-        item["機組名稱"].includes("合計")) {
+    if (
+      !item["機組名稱"] ||
+      item["機組名稱"].includes("小計") ||
+      item["機組名稱"].includes("合計")
+    ) {
       continue;
     }
 
@@ -108,7 +108,7 @@ export function taipowerApiAdapter(
         netGenerationMW: parseNumericValue(item["淨發電量(MW)"]),
         note: (item["備註"] || "").trim(),
       };
-      
+
       units.push(unitData);
     } catch (error) {
       console.warn(`處理機組資料時發生錯誤: ${item["機組名稱"]}`, error);
@@ -126,6 +126,8 @@ export function taipowerApiAdapter(
     units,
   };
 
-  console.log(`台電資料適配完成: ${units.length} 個機組，時間: ${DateTime.toISOString()}`);
+  console.log(
+    `台電資料適配完成: ${units.length} 個機組，時間: ${DateTime.toISOString()}`
+  );
   return snapshot;
 }

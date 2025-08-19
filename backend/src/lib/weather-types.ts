@@ -1,7 +1,7 @@
 /**
  * @file /src/lib/weather-types.ts
  * @description 為 CWA O-A0001-001 和 O-A0003-001 API 回應以及資料庫儲存模型定義 TypeScript 型別。
- * @author 資深軟體工程師
+ * @author natsuki221
  * @version 3.0.0
  * @date 2025-08-11
  */
